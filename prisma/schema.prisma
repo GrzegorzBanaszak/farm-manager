@@ -12,9 +12,83 @@ datasource db {
 
 model User {
   id          String   @id @default(uuid())
-  FullName    String
-  Position    Position @default(Employee)
-  PhoneNumber String
+  fullName    String
+  position    Position @default(Employee)
+  phoneNumber String
+}
+
+model Schedule {
+  id         String      @id @default(uuid())
+  tasks      Task[]
+  orders     Order[]
+  fieldWorks FieldWork[]
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  description String
+  createdAt   DateTime  @default(now())
+  Schedule    Schedule? @relation(fields: [scheduleId], references: [id])
+  scheduleId  String?
+}
+
+model Order {
+  id                 String             @id @default(uuid())
+  description        String
+  createdAt          DateTime           @default(now())
+  commoditiesToOrder CommodityToOrder[]
+  Schedule           Schedule?          @relation(fields: [scheduleId], references: [id])
+  scheduleId         String?
+}
+
+model CommodityToOrder {
+  id          String    @id @default(uuid())
+  commodity   Commodity @relation(fields: [commodityId], references: [id])
+  quantity    Decimal
+  commodityId String
+  Order       Order?    @relation(fields: [orderId], references: [id])
+  orderId     String?
+}
+
+model Commodity {
+  id               String             @id @default(uuid())
+  name             String
+  quantityOnStock  Decimal
+  currentPrice     Decimal
+  CommodityToOrder CommodityToOrder[]
+}
+
+model Field {
+  id          String        @id @default(uuid())
+  area        Int
+  cultivation Cultivation[]
+  FieldWork   FieldWork[]
+}
+
+model FieldWork {
+  id         String    @id @default(uuid())
+  date       DateTime  @default(now())
+  workType   String
+  field      Field     @relation(fields: [fieldId], references: [id])
+  fieldId    String
+  Schedule   Schedule? @relation(fields: [scheduleId], references: [id])
+  scheduleId String?
+}
+
+model Cultivation {
+  id       String   @id @default(uuid())
+  startAt  DateTime @default(now())
+  updateAt DateTime @updatedAt()
+  crop     Crop     @relation(fields: [cropId], references: [id])
+  cropId   String
+  Field    Field?   @relation(fields: [fieldId], references: [id])
+  fieldId  String?
+}
+
+model Crop {
+  id          String        @id @default(uuid())
+  name        String
+  Cultivation Cultivation[]
 }
 
 enum Position {
