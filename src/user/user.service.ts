@@ -18,6 +18,14 @@ export class UserService {
     });
   }
 
+  async getUserById(id: string) {
+    return await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
+
   async addUser(data: CreateUserDto) {
     const schedule = await this.prisma.schedule.create({ data: {} });
 
