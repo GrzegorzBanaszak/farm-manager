@@ -59,7 +59,7 @@ Produkt ma umożliwić rolnikowi lepsze zarządzanie gospodarstwem poprzez możl
 
 **Opis struktury relacji bazy danych**
 
-![Struktura](/images/GospodarstwoRolne.jpg)
+![Struktura](/images/diagraminformatyczny.jpg)
 
 **Technologie**
 

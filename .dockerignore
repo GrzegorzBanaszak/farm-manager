@@ -1,5 +1,5 @@
-.dockerignore   # Ignore the ignore
-node_modules    # Ignore local node_modules folder
+.dockerignore 
+node_modules 
 npm-debug.log   # Debug files
 Dockerfile      # The dockerfile
 .git            # The git history

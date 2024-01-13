@@ -1,102 +1,119 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-model User {
-  id          String   @id @default(uuid())
-  fullName    String
-  position    Position @default(Employee)
-  phoneNumber String
-  schedule    Schedule @relation(fields: [scheduleId], references: [id])
-  scheduleId  String
+model Uzytkownik {
+  id                      String                   @id() @default(uuid())
+  login                   String                   @unique()
+  haslo                   String
+  typUzytkownika          String
+  imieOrazNazwisko        String
+  otrzymanePowiadomiena   Powiadomienie[]          @relation("odbiorca")
+  wystawionePowiadomienia Powiadomienie[]          @relation("wystawiajacy")
+  zlecenieMenadzera       ZleceniePracy[]          @relation("menadzer")
+  zleceniaPracownicze     PracownikWZlecenuPracy[]
+  NotaZapotrzebowania     NotaZapotrzebowania[]
+  ZamowienieDoDostawcy    ZamowienieDoDostawcy[]
 }
 
-model Schedule {
-  id         String      @id @default(uuid())
-  tasks      Task[]
-  orders     Order[]
-  fieldWorks FieldWork[]
-  User       User[]
+model PoleUprawne {
+  id            String          @id() @default(uuid())
+  wielkoscWm2   Decimal
+  miasto        String
+  ulica         String
+  ZleceniePracy ZleceniePracy[]
 }
 
-model Task {
-  id          String    @id @default(uuid())
-  description String
-  createdAt   DateTime  @default(now())
-  Schedule    Schedule? @relation(fields: [scheduleId], references: [id])
-  scheduleId  String?
+model Maszyna {
+  id              String         @id() @default(uuid())
+  marka           String
+  model           String
+  przebieg        String?
+  ZleceniePracy   ZleceniePracy? @relation(fields: [zleceniePracyId], references: [id])
+  zleceniePracyId String?
 }
 
-model Order {
-  id                 String             @id @default(uuid())
-  description        String
-  createdAt          DateTime           @default(now())
-  commoditiesToOrder CommodityToOrder[]
-  Schedule           Schedule?          @relation(fields: [scheduleId], references: [id])
-  scheduleId         String?
+model Powiadomienie {
+  id                  String               @id() @default(uuid())
+  opis                String
+  odbiorca            Uzytkownik           @relation("odbiorca", fields: [uzytkownikId], references: [id])
+  wystawiajacy        Uzytkownik           @relation("wystawiajacy", fields: [wystawiajacyId], references: [id])
+  uzytkownikId        String
+  wystawiajacyId      String
+  ZleceniePracy       ZleceniePracy?       @relation(fields: [zleceniePracyId], references: [id])
+  zleceniePracyId     String?
+  PrzyjecieMagazynowe PrzyjecieMagazynowe?
 }
 
-model CommodityToOrder {
-  id          String    @id @default(uuid())
-  commodity   Commodity @relation(fields: [commodityId], references: [id])
-  quantity    Decimal
-  commodityId String
-  Order       Order?    @relation(fields: [orderId], references: [id])
-  orderId     String?
+model ZleceniePracy {
+  id                  String                   @id() @default(uuid())
+  numerZleceniaPracy  String
+  dataWystawienia     DateTime
+  notaWlasciciela     String
+  notaMenadzera       String
+  poleUprawne         PoleUprawne              @relation(fields: [poleUprawneId], references: [id])
+  poleUprawneId       String
+  menadzer            Uzytkownik               @relation("menadzer", fields: [menagerId], references: [id])
+  menagerId           String
+  pracownicy          PracownikWZlecenuPracy[]
+  przydzieloneMaszyny Maszyna[]
+  powiadomienia       Powiadomienie[]
 }
 
-model Commodity {
-  id               String             @id @default(uuid())
-  name             String
-  quantityOnStock  Decimal
-  currentPrice     Decimal
-  CommodityToOrder CommodityToOrder[]
+model PracownikWZlecenuPracy {
+  id              String        @default(uuid())
+  ZleceniePracy   ZleceniePracy @relation(fields: [zleceniePracyId], references: [id])
+  zleceniePracyId String
+  Uzytkownik      Uzytkownik    @relation(fields: [uzytkownikId], references: [id])
+  uzytkownikId    String
+
+  @@id([id, zleceniePracyId, uzytkownikId])
 }
 
-model Field {
-  id          String        @id @default(uuid())
-  area        Int
-  cultivation Cultivation[]
-  FieldWork   FieldWork[]
+model NotaZapotrzebowania {
+  id                   String                @id() @default(uuid())
+  zamawiajacy          Uzytkownik            @relation(fields: [zamawiajacyId], references: [id])
+  opis                 String
+  zamawiajacyId        String
+  listaTowarow         TowarNaZamowienu[]
+  dataWystawienia      DateTime
+  ZamowienieDoDostawcy ZamowienieDoDostawcy?
 }
 
-model FieldWork {
-  id         String    @id @default(uuid())
-  date       DateTime  @default(now())
-  workType   String
-  field      Field     @relation(fields: [fieldId], references: [id])
-  fieldId    String
-  Schedule   Schedule? @relation(fields: [scheduleId], references: [id])
-  scheduleId String?
+model ZamowienieDoDostawcy {
+  id                    String              @id() @default(uuid())
+  magazynier            Uzytkownik          @relation(fields: [magazynierId], references: [id])
+  magazynierId          String
+  notaZapotrzebowania   NotaZapotrzebowania @relation(fields: [notaZapotrzebowaniaId], references: [id])
+  notaZapotrzebowaniaId String              @unique
 }
 
-model Cultivation {
-  id       String   @id @default(uuid())
-  startAt  DateTime @default(now())
-  updateAt DateTime @updatedAt()
-  crop     Crop     @relation(fields: [cropId], references: [id])
-  cropId   String
-  Field    Field?   @relation(fields: [fieldId], references: [id])
-  fieldId  String?
+model PrzyjecieMagazynowe {
+  id                      String        @id() @default(uuid())
+  dataPrzyjecia           DateTime      @default(now())
+  powiadomienieOPrzyjeciu Powiadomienie @relation(fields: [powiadomienieId], references: [id])
+  powiadomienieId         String        @unique
 }
 
-model Crop {
-  id          String        @id @default(uuid())
-  name        String
-  Cultivation Cultivation[]
+model TowarNaZamowienu {
+  id                    String              @id() @default(uuid())
+  iloscNaZamowienu      Decimal
+  cena                  Decimal
+  towar                 Towar               @relation(fields: [towarId], references: [id])
+  towarId               String
+  NotaZapotrzebowania   NotaZapotrzebowania @relation(fields: [notaZapotrzebowaniaId], references: [id])
+  notaZapotrzebowaniaId String
 }
 
-enum Position {
-  Owner
-  Manager
-  Warehouseman
-  Employee
+model Towar {
+  id               String             @id() @default(uuid())
+  nazwa            String
+  opis             String
+  iloscWMagazynie  Decimal
+  TowarNaZamowienu TowarNaZamowienu[]
 }

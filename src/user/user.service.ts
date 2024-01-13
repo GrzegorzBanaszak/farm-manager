@@ -1,61 +1,47 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { CreateUserDto } from './dto/CreateUserDto';
-import GetUserDto from './dto/GetUserDto';
+import { UserCreateDto } from './dto/post-user';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getUsers(): Promise<GetUserDto[]> {
-    return await this.prisma.user.findMany({
+  async createUser(data: UserCreateDto) {
+    //Ukrywanie hasła
+    const saltOrRounds = 10;
+    const hash = await bcrypt.hash(data.password, saltOrRounds);
+    //Dodawanie nowego użytkownika
+    const createdUser = await this.prisma.uzytkownik.create({
+      data: {
+        login: data.login,
+        haslo: hash,
+        typUzytkownika: data.userType,
+        imieOrazNazwisko: data.fullName,
+      },
       select: {
         id: true,
-        fullName: true,
-        phoneNumber: true,
-        position: true,
+        login: true,
+        typUzytkownika: true,
+        imieOrazNazwisko: true,
       },
     });
+
+    return createdUser;
   }
 
-  async getUserById(id: string) {
-    return await this.prisma.user.findUnique({
+  async getUser(login: string) {
+    return await this.prisma.uzytkownik.findUnique({
       where: {
-        id,
+        login,
+      },
+      select: {
+        id: true,
+        login: true,
+        haslo: true,
+        typUzytkownika: true,
+        imieOrazNazwisko: true,
       },
     });
-  }
-
-  async addUser(data: CreateUserDto) {
-    const schedule = await this.prisma.schedule.create({ data: {} });
-
-    const user = await this.prisma.user.create({
-      data: {
-        ...data,
-        scheduleId: schedule.id,
-      },
-    });
-
-    return user;
-  }
-
-  async updateUser(id: string, data: CreateUserDto) {
-    const updatedUser = await this.prisma.user.update({
-      where: {
-        id,
-      },
-      data,
-    });
-    return updatedUser;
-  }
-
-  async deleteUser(id: string) {
-    const deleteUser = await this.prisma.user.delete({
-      where: {
-        id,
-      },
-    });
-
-    return deleteUser;
   }
 }

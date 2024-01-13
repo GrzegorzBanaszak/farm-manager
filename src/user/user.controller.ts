@@ -1,49 +1,37 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/CreateUserDto';
+import { Body, Controller, Get, NotFoundException, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { LoginUser, UserCreateDto } from './dto/post-user';
+import { UserService } from './user.service';
+import * as bcrypt from 'bcrypt';
 
 @Controller('user')
 @ApiTags('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
-  async getAll() {
-    return await this.userService.getUsers();
-  }
+  @Post('/login')
+  async login(@Body() data: LoginUser) {
+    const user = await this.userService.getUser(data.login);
 
-  @Get(':id')
-  async getById(@Param('id') id: string) {
-    const user = await this.userService.getUserById(id);
     if (!user) {
-      throw new NotFoundException(`User with ${id} does not exist.`);
+      throw new NotFoundException(
+        `Uzytkownik ${data.login} nie istnieje w bazie danych`,
+      );
     }
+
+    const isMatch = await bcrypt.compare(data.password, user.haslo);
+
+    if (!isMatch) {
+      throw new NotFoundException(`Nieprawidłowe hasło`);
+    }
+
+    delete user['haslo'];
 
     return user;
   }
 
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.addUser(createUserDto);
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() createUserDto: CreateUserDto) {
-    return await this.userService.updateUser(id, createUserDto);
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return await this.userService.deleteUser(id);
+  @Post('/create')
+  async create(@Body() data: UserCreateDto) {
+    return await this.userService.createUser(data);
   }
 }
