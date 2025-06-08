@@ -1,0 +1,6 @@
+@farm_manager.API_HostAddress = http://localhost:5206
+
+GET {{farm_manager.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

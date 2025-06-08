@@ -1,0 +1,44 @@
+# Ignorowanie buildów
+[Bb]in/
+[Oo]bj/
+
+# MS Build / publish
+*.publish.xml
+publish/
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Rider
+.idea/
+*.ReSharper.*
+
+# ASP.NET Scaffolding
+ScaffoldedFiles/
+
+# Generowane pliki NuGet
+*.nupkg
+packages/
+*.snupkg
+
+# Urz¹dzenia debugowania, cache
+*.vsp
+*.vspx
+*.log
+
+# FluentValidation, dotCover, ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# Dotnet test
+TestResults/
+*.trx
+xunit-*.xml
+
+# Tooling / globalne narzêdzia
+.vscode/
+*.code-workspace
